@@ -2,7 +2,7 @@
 	<property name="pluginname" value="AutoShutdown"/>
 	<property name="bukkit.jar" location="../../bukkit/bukkit-0.0.1-SNAPSHOT.jar"/>
 	<property name="craftbukkit.jar" location="../../bukkit/craftbukkit-0.0.1-SNAPSHOT.jar"/>
-	<property name="plugins" location="../../../Development/bukkit/plugins/"/>
+	<property name="plugins" location="../../bukkit/plugins/"/>
 
 	<property name="src" location="src"/>
 	<property name="bin" location="bin"/>
