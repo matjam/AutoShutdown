@@ -57,7 +57,7 @@ public class ShutdownScheduleTask extends TimerTask {
 				for (Integer warnTime : plugin.warnTimes) {
 					long longWarnTime = warnTime.longValue() * 1000;
 					
-					if (longWarnTime < cal.getTimeInMillis() - now.getTimeInMillis()) {
+					if (longWarnTime <= cal.getTimeInMillis() - now.getTimeInMillis()) {
 						plugin.shutdownTimer.schedule(new WarnTask(plugin, warnTime.longValue()), 
 								cal.getTimeInMillis() - now.getTimeInMillis() - longWarnTime); 
 					}

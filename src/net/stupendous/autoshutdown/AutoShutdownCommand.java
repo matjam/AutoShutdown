@@ -68,7 +68,8 @@ public class AutoShutdownCommand implements CommandExecutor {
 	    		Util.reply(sender, "     lists the currently scheduled shutdowns");
 	    		break;
 	    	case RELOAD:
-	    		plugin.config = plugin.getConfiguration();
+	    		plugin.loadConfiguration();
+	    		plugin.scheduleAll();
 	    		Util.reply(sender, "Configuration reloaded.");
 	    		break;
 	    	case CANCEL:
@@ -96,7 +97,7 @@ public class AutoShutdownCommand implements CommandExecutor {
 	    		Calendar stopTime = null;
 	    		
 				try {
-					stopTime = plugin.configure(args[1]);
+					stopTime = plugin.scheduleShutdownTime(args[1]);
 				} catch (Exception e) {
 	    			Util.replyError(sender, "Usage:");
 	    			Util.replyError(sender, "   /as set <time>");

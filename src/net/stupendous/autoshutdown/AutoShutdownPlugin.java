@@ -73,21 +73,13 @@ public class AutoShutdownPlugin extends JavaPlugin {
     	shutdownImminent = false;
     	shutdownTimes.clear();
 		
-    	/* Load configuration and set some sane defaults */
-    	
-    	config = getConfiguration();
-
-    	config.getString("shutdowntimes", "02:00,14:00");
-    	config.getString("warntimes","900,600,300,240,180,120,60,45,30,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1");
-    	config.getBoolean("kickonshutdown", true);
-    	config.getString("kickreason", "Scheduled Shutdown.");
-    	config.getInt("gracetime", 30);
+    	loadConfiguration();
     	
     	CommandExecutor autoShutdownCommandExecutor = new AutoShutdownCommand(this);
     	getCommand("autoshutdown").setExecutor(autoShutdownCommandExecutor);
     	getCommand("as").setExecutor(autoShutdownCommandExecutor);
    	
-    	configure();
+    	scheduleAll();
     
     	Util.init(this, pluginName, log);
     	
@@ -135,7 +127,21 @@ public class AutoShutdownPlugin extends JavaPlugin {
         log.info("Version %s enabled.", pdf.getVersion());
     }
 
-    protected void configure() {
+    protected void loadConfiguration() {
+    	/* Load configuration and set some sane defaults */
+
+    	config = new Configuration(new File(getDataFolder().getPath() + "/config.yml"));
+    	
+    	config.load();
+
+    	config.getString("shutdowntimes", "02:00,14:00");
+    	config.getString("warntimes","900,600,300,240,180,120,60,45,30,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1");
+    	config.getBoolean("kickonshutdown", true);
+    	config.getString("kickreason", "Scheduled Shutdown.");
+    	config.getInt("gracetime", 30);
+    }
+    
+    protected void scheduleAll() {
     	// This configures the shutdown times based on configuration.
 
     	shutdownTimes.clear();
@@ -146,7 +152,7 @@ public class AutoShutdownPlugin extends JavaPlugin {
 			String shutdownTimeStringArray[] = shutdownTimeString.split("\\s*,\\s*");
 			
 			for(String timeString : shutdownTimeStringArray) {
-				Calendar cal = configure(timeString);
+				Calendar cal = scheduleShutdownTime(timeString);
 				log.info("Shutdown scheduled for %s", cal.getTime().toString());
 			}
 		} catch (Exception e) {
@@ -160,7 +166,7 @@ public class AutoShutdownPlugin extends JavaPlugin {
 		}
     }
     
-    protected Calendar configure(String timeSpec) throws Exception {
+    protected Calendar scheduleShutdownTime(String timeSpec) throws Exception {
     	if (timeSpec == null)
     		return null;
     	
@@ -177,7 +183,7 @@ public class AutoShutdownPlugin extends JavaPlugin {
 			for (Integer warnTime : warnTimes) {
 				long longWarnTime = warnTime.longValue() * 1000;
 				
-				if (longWarnTime < secondsToWait * 1000) {
+				if (longWarnTime <= secondsToWait * 1000) {
 					shutdownTimer.schedule(new WarnTask(this, warnTime.longValue()), 
 							secondsToWait * 1000 - longWarnTime); 
 				}

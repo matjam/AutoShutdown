@@ -23,7 +23,7 @@ public class ShutdownTask extends TimerTask {
 	public void run() {
 		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 			public void run() {
-				log.info("Shutting down now!");
+				log.info("Shutdown in progress.");
 				
 				plugin.kickAll();
 				
@@ -39,8 +39,6 @@ public class ShutdownTask extends TimerTask {
 				}
 				
 				server.shutdown();
-				
-				log.info("Server shut down."); // Should anyone see this message?	
 			}
 		});
 	}
