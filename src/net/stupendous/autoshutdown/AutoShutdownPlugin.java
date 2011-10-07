@@ -6,9 +6,13 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.Properties;
@@ -26,12 +30,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
+import org.bukkit.util.config.Configuration;
 import org.bukkit.plugin.Plugin;
 
 public class AutoShutdownPlugin extends JavaPlugin {
 	public String pluginName = "AutoShutdown"; // Need to do this because there is no way to load the PDF at initialisation time.
 	public final Log log = new Log(pluginName);
-	protected Properties config = new Properties();
+	protected Configuration config = null;
 	public PluginDescriptionFile pdf = null; 
 	protected ShutdownScheduleTask task = null;
 	protected Timer backgroundTimer = null;
@@ -41,6 +46,8 @@ public class AutoShutdownPlugin extends JavaPlugin {
 	protected TreeSet<Calendar> shutdownTimes = new TreeSet<Calendar>();
 	protected ArrayList<Integer> warnTimes = new ArrayList<Integer>();
 	protected String shutdownReason = "Scheduled Shutdown";
+	
+	File propFile = null;
 
 	public void onDisable() {
 		shutdownImminent = false;
@@ -66,10 +73,15 @@ public class AutoShutdownPlugin extends JavaPlugin {
     	shutdownImminent = false;
     	shutdownTimes.clear();
 		
-    	if (!loadProperties("AutoShutdown.properties")) {
-        	log.info("Unable to enable plugin. Properties file AutoShutdown/AutoShutdown.properties does not exist and could not be created.");
-        	return;
-        }
+    	/* Load configuration and set some sane defaults */
+    	
+    	config = getConfiguration();
+
+    	config.getString("shutdowntimes", "02:00,14:00");
+    	config.getString("warntimes","900,600,300,240,180,120,60,45,30,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1");
+    	config.getBoolean("kickonshutdown", true);
+    	config.getString("kickreason", "Scheduled Shutdown.");
+    	config.getInt("gracetime", 30);
     	
     	CommandExecutor autoShutdownCommandExecutor = new AutoShutdownCommand(this);
     	getCommand("autoshutdown").setExecutor(autoShutdownCommandExecutor);
@@ -118,6 +130,8 @@ public class AutoShutdownPlugin extends JavaPlugin {
     		log.severe("Failed to schedule AutoShutdownTask: %s", e.getMessage());
     	}
     	
+    	config.save();
+    	
         log.info("Version %s enabled.", pdf.getVersion());
     }
 
@@ -128,9 +142,8 @@ public class AutoShutdownPlugin extends JavaPlugin {
     	warnTimes.clear();
     	
 		try {
-			String shutdownTimeString = config.getProperty("shutdown.time");
+			String shutdownTimeString = config.getString("shutdowntimes");
 			String shutdownTimeStringArray[] = shutdownTimeString.split("\\s*,\\s*");
-			
 			
 			for(String timeString : shutdownTimeStringArray) {
 				Calendar cal = configure(timeString);
@@ -142,7 +155,7 @@ public class AutoShutdownPlugin extends JavaPlugin {
 			log.severe("Error: %s", e.getMessage());
 		}
 		
-		for(String warnTime : config.getProperty("shutdown.warn").split("\\s*,\\s*")) {
+		for(String warnTime : config.getString("warntimes").split("\\s*,\\s*")) {
 			warnTimes.add(Integer.decode(warnTime));
 		}
     }
@@ -153,7 +166,7 @@ public class AutoShutdownPlugin extends JavaPlugin {
     	
     	if (timeSpec.matches("^now$")) {
     		Calendar now = Calendar.getInstance();
-    		int secondsToWait = Integer.decode(config.getProperty("shutdown.now")).intValue();
+    		int secondsToWait = config.getInt("gracetime", 30);
     		now.add(Calendar.SECOND, secondsToWait);
     		
 			shutdownImminent = true;
@@ -178,7 +191,7 @@ public class AutoShutdownPlugin extends JavaPlugin {
     		return now;
     	}
     	
-    	if (!timeSpec.matches("^[0-9]{2}:[0-9]{2}$")) {
+    	if (!timeSpec.matches("^[0-9]{1,2}:[0-9]{2}$")) {
     		throw new Exception("Incorrect time specification. The format is HH:MM in 24h time.");
     	}
 
@@ -203,7 +216,7 @@ public class AutoShutdownPlugin extends JavaPlugin {
     }
 
 	protected void kickAll() {
-		if (Boolean.valueOf(config.getProperty("shutdown.kick")).booleanValue() != true) {
+		if (config.getBoolean("kickonshutdown", true)) {
 			return;
 		}
 		
@@ -213,65 +226,9 @@ public class AutoShutdownPlugin extends JavaPlugin {
 		
 		for (Player player : players) {
 			log.info("Kicking player %s.", player.getName());
-			player.kickPlayer(config.getProperty("shutdown.reason"));
+			player.kickPlayer(config.getString("kickreason"));
 		}
-	}
-
-	private boolean loadProperties(String file) {
-		File propFile = new File("plugins/" + pluginName + "/" + file);
-		
-		if (!propFile.exists()) {
-			if (!createProperties(propFile, file)) {
-				return false;
-			}
-		}
-		
-		// Now load the properties file.
-		
-		try {
-			config.load(new FileInputStream(propFile));
-		} catch (IOException e) {
-			log.severe("Unable to load properties file: %s", e.getMessage());
-			return false;
-		}
-		
-		return true;
-	}
-	
-	private boolean createProperties(File propFile, String file) {
-		// mkdir just in case
-		
-		File confDir = new File("plugins/" + pluginName);
-		confDir.mkdir();
-		
-		// Copy the default configuration from the jar to the config dir
-		
-		BufferedReader br = new BufferedReader(new InputStreamReader(this.getClassLoader().getResourceAsStream(file)));
-		BufferedWriter bw = null;
-		try {
-			bw = new BufferedWriter(new FileWriter(propFile));
-		} catch (IOException e) {
-			log.severe("Unable to write to %s: %s", propFile.getPath(), e.getMessage());
-			return false;
-		}
-		
-		// This effectively converts the file's line endings. Not sure if thats appropriate.
-		// There is probably a better way to copy a file from the jar.
-		
-		String line = null;
-		
-		try {
-			while ((line = br.readLine()) != null) {
-				bw.write(line);
-				bw.newLine();		
-			}
-			bw.close();
-			br.close();
-		} catch (IOException e) {
-			log.severe("Cannot copy properties file: %s", e.getMessage());
-			return false;
-		}
-		return true;
 	}
 }
+
 

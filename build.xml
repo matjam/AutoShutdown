@@ -13,7 +13,7 @@
 	</target>
 
 	<target name="compile" depends="init">
-		<javac srcdir="${src}" destdir="${obj}" includeantruntime="false">
+		<javac srcdir="${src}" destdir="${obj}" includeantruntime="false" debug="true">
 			<classpath>
 				<pathelement location="${bukkit.jar}"/>
 				<pathelement location="${craftbukkit.jar}"/>

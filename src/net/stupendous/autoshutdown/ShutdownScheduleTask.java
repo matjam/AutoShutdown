@@ -67,6 +67,8 @@ public class ShutdownScheduleTask extends TimerTask {
 				
 				plugin.shutdownTimer.schedule(new ShutdownTask(plugin), cal.getTime());
 				
+				Util.broadcast("Server will shut down at %s", cal.getTime().toString());
+				
 				break; // We don't need to schedule any more.
 			}
 		}

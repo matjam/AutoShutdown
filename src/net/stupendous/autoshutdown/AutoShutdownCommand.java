@@ -1,5 +1,7 @@
 package net.stupendous.autoshutdown;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Calendar;
 
 import net.stupendous.autoshutdown.misc.*;
@@ -66,7 +68,7 @@ public class AutoShutdownCommand implements CommandExecutor {
 	    		Util.reply(sender, "     lists the currently scheduled shutdowns");
 	    		break;
 	    	case RELOAD:
-	    		plugin.configure();
+	    		plugin.config = plugin.getConfiguration();
 	    		Util.reply(sender, "Configuration reloaded.");
 	    		break;
 	    	case CANCEL:
@@ -103,6 +105,24 @@ public class AutoShutdownCommand implements CommandExecutor {
 				
 				Util.reply(sender, "Shutdown scheduled for %s", stopTime.getTime().toString());
 
+				String timeString = "";
+				
+				for (Calendar shutdownTime : plugin.shutdownTimes) {
+					if (plugin.shutdownTimes.first().equals(shutdownTime)) {
+						timeString = timeString.concat(String.format("%d:%02d", shutdownTime.get(Calendar.HOUR_OF_DAY), shutdownTime.get(Calendar.MINUTE)));
+					} else {
+						timeString = timeString.concat(String.format(",%d:%02d", shutdownTime.get(Calendar.HOUR_OF_DAY), shutdownTime.get(Calendar.MINUTE)));
+					}
+				}
+
+				plugin.config.setProperty("shutdowntimes", timeString);
+				
+				try {
+					plugin.config.save();
+				} catch (Exception e) {
+					Util.replyError(sender, "Unable to save configuration: %s", e.getMessage());
+				}
+				
 	    		break;
 	    	case LIST:
 	    		if (plugin.shutdownTimes.size() != 0) { 
