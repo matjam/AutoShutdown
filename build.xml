@@ -5,15 +5,15 @@
 	<property name="plugins" location="../../bukkit/plugins/"/>
 
 	<property name="src" location="src"/>
-	<property name="bin" location="bin"/>
+	<property name="obj" location="obj"/>
 	<property name="dist" location="dist"/>
 
 	<target name="init">
-		<mkdir dir="${bin}"/>
+		<mkdir dir="${obj}"/>
 	</target>
 
 	<target name="compile" depends="init">
-		<javac srcdir="${src}" destdir="${bin}" includeantruntime="false">
+		<javac srcdir="${src}" destdir="${obj}" includeantruntime="false">
 			<classpath>
 				<pathelement location="${bukkit.jar}"/>
 				<pathelement location="${craftbukkit.jar}"/>
@@ -24,8 +24,9 @@
 	<target name="dist" depends="compile">
 		<mkdir dir="${dist}"/>
 		<jar jarfile="${dist}/${pluginname}.jar">
-			<fileset dir="${bin}"/>
+			<fileset dir="${obj}"/>
 			<fileset file="${src}/plugin.yml"/>
+			<fileset file="${src}/AutoShutdown.properties"/>
 		</jar>
 	</target>
 
@@ -34,7 +35,7 @@
 	</target>
 
 	<target name="clean">
-		<delete dir="${bin}"/>
+		<delete dir="${obj}"/>
 		<delete dir="${dist}"/>
 	</target>
 </project>

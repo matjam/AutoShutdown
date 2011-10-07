@@ -1,5 +1,7 @@
 package net.stupendous.autoshutdown;
 
+import java.util.Calendar;
+
 import net.stupendous.autoshutdown.misc.*;
 
 import org.bukkit.ChatColor;
@@ -21,9 +23,8 @@ public class AutoShutdownCommand implements CommandExecutor {
 		HELP,
 		RELOAD,
 		CANCEL,
-		IMMEDIATE,
 		SET,
-		SHOW,
+		LIST,
 		UNKNOWN;
 		
 		private static SubCommand toSubCommand(String str) {
@@ -56,59 +57,61 @@ public class AutoShutdownCommand implements CommandExecutor {
 	    		Util.reply(sender, " /%s reload", command.getName());
 	    		Util.reply(sender, "     Reloads the configuration file");
 	    		Util.reply(sender, " /%s cancel", command.getName());
-	    		Util.reply(sender, "     Cancels the currently scheduled shutdown");
+	    		Util.reply(sender, "     Cancels the currently executing shutdown");
 	    		Util.reply(sender, " /%s set HH:MM:SS", command.getName());
 	    		Util.reply(sender, "     Sets a new scheduled shutdown time");
 	    		Util.reply(sender, " /%s set now", command.getName());
 	    		Util.reply(sender, "     Orders the server to shutdown immediately");
-	    		Util.reply(sender, " /%s show", command.getName());
-	    		Util.reply(sender, "     Shows the currently scheduled shutdown");
+	    		Util.reply(sender, " /%s list", command.getName());
+	    		Util.reply(sender, "     lists the currently scheduled shutdowns");
 	    		break;
 	    	case RELOAD:
 	    		plugin.configure();
 	    		Util.reply(sender, "Configuration reloaded.");
 	    		break;
 	    	case CANCEL:
-	    		if (plugin.timer != null) {
-		    		plugin.timer.cancel();
-		    		plugin.timer.purge();
-		    		plugin.timer = null; // Yeah, you need to do this.
-
-		    		Util.reply(sender, "Shutdown cancelled. The server will shut down at");
-		    		Util.reply(sender, "the next scheduled shutdown time.");
+	    		if (plugin.shutdownTimer != null) {
+	    			plugin.shutdownTimer.cancel();
+	    			plugin.shutdownTimer.purge();
+	    			plugin.shutdownTimer = null;
+		    		plugin.shutdownImminent = false;
 		    		
-	    			Util.broadcast("&cAutomated Shutdown at &a%s&c has been cancelled by &a%s&c.", 
-	    					plugin.stopTime.getTime().toString(),
-	    					sender instanceof Player ? ((Player) sender).getName() : "CONSOLE"
-	    			);
+		    		Util.reply(sender, "Shutdown was aborted.");
 	    		} else {
-	    			Util.replyError(sender, "Shutdown already cancelled.");
+	    			Util.replyError(sender, "There is no impending shutdown. If you wish to remove");
+	    			Util.replyError(sender, "a scheduled shutdown, remove it from the configuration");
+	    			Util.replyError(sender, "and reload.");
 	    		}
-
 	    		break;
 	    	case SET:
-	    		if (args.length == 1) {
-	    			Util.replyError(sender, "Please specify a time specifier in the following format:");
-	    			Util.replyError(sender, "     HH:MM:SS");
-	    			Util.replyError(sender, "     now");
+	    		if (args.length < 2) {
+	    			Util.replyError(sender, "Usage:");
+	    			Util.replyError(sender, "   /as set <time>");
+	    			Util.replyError(sender, "<time> can be either 'now' or a 24h time in HH:MM format.");
 	    			return true;
 	    		}
 	    		
-				try {
-					plugin.configure(args[1]);
-				} catch (Exception e) {
-					Util.replyError(sender, "Unknown format string. Please use &fHH:MM:SS &cor the string '&fnow&c'");				}
+	    		Calendar stopTime = null;
 	    		
-				Util.reply(sender, "Automatic Shutdown Scheduled at");
-				Util.reply(sender, "   %s", plugin.stopTime.getTime().toString());
+				try {
+					stopTime = plugin.configure(args[1]);
+				} catch (Exception e) {
+	    			Util.replyError(sender, "Usage:");
+	    			Util.replyError(sender, "   /as set <time>");
+	    			Util.replyError(sender, "<time> can be either 'now' or a 24h time in HH:MM format.");
+				}
+				
+				Util.reply(sender, "Shutdown scheduled for %s", stopTime.getTime().toString());
 
 	    		break;
-	    	case SHOW:
-	    		if (plugin.timer != null) { 
-					Util.reply(sender, "Automatic Shutdown Scheduled at");
-					Util.reply(sender, "   %s", plugin.stopTime.getTime().toString());
+	    	case LIST:
+	    		if (plugin.shutdownTimes.size() != 0) { 
+					Util.reply(sender, "Shutdowns scheduled at");
+					for (Calendar shutdownTime : plugin.shutdownTimes) {
+						Util.reply(sender, "   %s", shutdownTime.getTime().toString());
+					}
 	    		} else {
-					Util.replyError(sender, "sNo Automatic Shutdown scheduled.");
+					Util.replyError(sender, "No shutdowns scheduled.");
 	    		}
 	    		break;
 	    	case UNKNOWN:

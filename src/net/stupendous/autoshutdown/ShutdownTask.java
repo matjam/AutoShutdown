@@ -11,11 +11,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.Server;
 import org.bukkit.World;
 
-public class AutoShutdownTask extends TimerTask {
+public class ShutdownTask extends TimerTask {
 	protected AutoShutdownPlugin plugin = null;
 	protected Log log = null;
 	
-	AutoShutdownTask(AutoShutdownPlugin instance) {
+	ShutdownTask(AutoShutdownPlugin instance) {
 		plugin = instance;
 		log = plugin.log;
 	}
