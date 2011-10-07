@@ -1,3 +1,10 @@
 This is a plugin for bukkit.
 
 AutoShutdown is documented on bukkitdev: http://dev.bukkit.org/server-mods/autoshutdown/
+
+CHANGELOG:
+
+Version 2.2:
+
+ * Changed to bukkit standard config.yml.
+ * Saves new shutdown times when you add them with /as set.
