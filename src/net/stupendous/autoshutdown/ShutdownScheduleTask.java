@@ -1,17 +1,11 @@
 package net.stupendous.autoshutdown;
 
 import java.util.Calendar;
-import java.util.Locale;
-import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.TimeUnit;
 
-import net.stupendous.autoshutdown.misc.*;
-
-import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.Server;
-import org.bukkit.World;
+import net.stupendous.autoshutdown.misc.Log;
+import net.stupendous.autoshutdown.misc.Util;
 
 public class ShutdownScheduleTask extends TimerTask {
 	protected AutoShutdownPlugin plugin = null;

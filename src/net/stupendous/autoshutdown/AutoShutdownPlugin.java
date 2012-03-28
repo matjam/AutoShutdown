@@ -1,42 +1,23 @@
 package net.stupendous.autoshutdown;
 
-import net.stupendous.autoshutdown.misc.*;
-
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.sql.SQLException;
-import java.text.ParseException;
-import java.util.Properties;
-import javax.persistence.PersistenceException;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
-import java.util.List;
 import java.util.Timer;
 import java.util.TreeSet;
 
-import org.bukkit.ChatColor;
+import net.stupendous.autoshutdown.misc.Log;
+import net.stupendous.autoshutdown.misc.Util;
+
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
-import org.bukkit.util.config.Configuration;
-import org.bukkit.plugin.Plugin;
 
 public class AutoShutdownPlugin extends JavaPlugin {
 	public String pluginName = "AutoShutdown"; // Need to do this because there is no way to load the PDF at initialisation time.
 	public final Log log = new Log(pluginName);
-	protected Configuration config = null;
 	public PluginDescriptionFile pdf = null; 
 	protected ShutdownScheduleTask task = null;
 	protected Timer backgroundTimer = null;
@@ -122,23 +103,17 @@ public class AutoShutdownPlugin extends JavaPlugin {
     		log.severe("Failed to schedule AutoShutdownTask: %s", e.getMessage());
     	}
     	
-    	config.save();
-    	
-        log.info("Version %s enabled.", pdf.getVersion());
+    	saveConfig();
     }
 
     protected void loadConfiguration() {
     	/* Load configuration and set some sane defaults */
-
-    	config = new Configuration(new File(getDataFolder().getPath() + "/config.yml"));
-    	
-    	config.load();
-
-    	config.getString("shutdowntimes", "02:00,14:00");
-    	config.getString("warntimes","900,600,300,240,180,120,60,45,30,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1");
-    	config.getBoolean("kickonshutdown", true);
-    	config.getString("kickreason", "Scheduled Shutdown.");
-    	config.getInt("gracetime", 30);
+    	getConfig().options().copyDefaults(true);
+    	getConfig().getString("shutdowntimes", "02:00,14:00");
+    	getConfig().getString("warntimes","900,600,300,240,180,120,60,45,30,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1");
+    	getConfig().getBoolean("kickonshutdown", true);
+    	getConfig().getString("kickreason", "Scheduled Shutdown.");
+    	getConfig().getInt("gracetime", 30);
     }
     
     protected void scheduleAll() {
@@ -148,10 +123,8 @@ public class AutoShutdownPlugin extends JavaPlugin {
     	warnTimes.clear();
     	
 		try {
-			String shutdownTimeString = config.getString("shutdowntimes");
-			String shutdownTimeStringArray[] = shutdownTimeString.split("\\s*,\\s*");
-			
-			for(String timeString : shutdownTimeStringArray) {
+			String[] shutdownTimeStrings  = getConfig().getString("shutdowntimes").split(",");
+			for(String timeString : shutdownTimeStrings) {
 				Calendar cal = scheduleShutdownTime(timeString);
 				log.info("Shutdown scheduled for %s", cal.getTime().toString());
 			}
@@ -160,9 +133,9 @@ public class AutoShutdownPlugin extends JavaPlugin {
 			log.severe("Is the format of shutdown time correct? It should be only HH:MM.");
 			log.severe("Error: %s", e.getMessage());
 		}
-		
-		for(String warnTime : config.getString("warntimes").split("\\s*,\\s*")) {
-			warnTimes.add(Integer.decode(warnTime));
+		String[] strings = getConfig().getString("warntimes").split(",");
+		for(String warnTime : strings) {
+				warnTimes.add(Integer.decode(warnTime));
 		}
     }
     
@@ -172,7 +145,7 @@ public class AutoShutdownPlugin extends JavaPlugin {
     	
     	if (timeSpec.matches("^now$")) {
     		Calendar now = Calendar.getInstance();
-    		int secondsToWait = config.getInt("gracetime", 30);
+    		int secondsToWait = getConfig().getInt("gracetime", 30);
     		now.add(Calendar.SECOND, secondsToWait);
     		
 			shutdownImminent = true;
@@ -222,7 +195,7 @@ public class AutoShutdownPlugin extends JavaPlugin {
     }
 
 	protected void kickAll() {
-		if (config.getBoolean("kickonshutdown", true)) {
+		if (getConfig().getBoolean("kickonshutdown", true)) {
 			return;
 		}
 		
@@ -232,7 +205,7 @@ public class AutoShutdownPlugin extends JavaPlugin {
 		
 		for (Player player : players) {
 			log.info("Kicking player %s.", player.getName());
-			player.kickPlayer(config.getString("kickreason"));
+			player.kickPlayer(getConfig().getString("kickreason"));
 		}
 	}
 }
