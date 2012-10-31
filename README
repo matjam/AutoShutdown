@@ -4,6 +4,11 @@ AutoShutdown is documented on bukkitdev: http://dev.bukkit.org/server-mods/autos
 
 CHANGELOG:
 
+Version 2.3:
+
+ * Updated to bukkit 1.2.4 (build 1423).
+ * Removed the unnecessary server listener. 
+ 
 Version 2.2:
 
  * Changed to bukkit standard config.yml.

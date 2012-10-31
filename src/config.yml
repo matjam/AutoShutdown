@@ -1,0 +1,5 @@
+kickreason: Scheduled Shutdown.
+warntimes: 900,600,300,240,180,120,60,45,30,20,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1
+gracetime: 20
+kickonshutdown: true
+shutdowntimes: 3:00,8:00,11:00,14:00,17:00,2:13
