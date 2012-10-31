@@ -1,12 +1,10 @@
 package net.stupendous.autoshutdown;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.Calendar;
 
-import net.stupendous.autoshutdown.misc.*;
+import net.stupendous.autoshutdown.misc.Log;
+import net.stupendous.autoshutdown.misc.Util;
 
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -103,9 +101,9 @@ public class AutoShutdownCommand implements CommandExecutor {
 	    			Util.replyError(sender, "   /as set <time>");
 	    			Util.replyError(sender, "<time> can be either 'now' or a 24h time in HH:MM format.");
 				}
-				
-				Util.reply(sender, "Shutdown scheduled for %s", stopTime.getTime().toString());
-
+				if (stopTime != null) {
+					Util.reply(sender, "Shutdown scheduled for %s", stopTime.getTime().toString());
+				}
 				String timeString = "";
 				
 				for (Calendar shutdownTime : plugin.shutdownTimes) {
@@ -116,10 +114,10 @@ public class AutoShutdownCommand implements CommandExecutor {
 					}
 				}
 
-				plugin.config.setProperty("shutdowntimes", timeString);
+				plugin.getConfig().set("shutdowntimes", timeString);
 				
 				try {
-					plugin.config.save();
+					plugin.saveConfig();
 				} catch (Exception e) {
 					Util.replyError(sender, "Unable to save configuration: %s", e.getMessage());
 				}
@@ -143,7 +141,8 @@ public class AutoShutdownCommand implements CommandExecutor {
 	}
 
 	
-    private void reply(CommandSender sender, String message) {
+    @SuppressWarnings("unused")
+	private void reply(CommandSender sender, String message) {
     	if (sender == null) {
     		log.info(message);
     	} else {

@@ -1,13 +1,9 @@
 package net.stupendous.autoshutdown;
 
-import java.util.Calendar;
-import java.util.Locale;
-import java.util.Date;
 import java.util.TimerTask;
 
-import net.stupendous.autoshutdown.misc.*;
+import net.stupendous.autoshutdown.misc.Log;
 
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.Server;
 import org.bukkit.World;
 
